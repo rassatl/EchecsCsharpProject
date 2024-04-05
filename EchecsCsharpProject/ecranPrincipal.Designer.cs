@@ -15,35 +15,20 @@ namespace EchecsCsharpProject
         private List<String> listeCoupJouee = new List<string>();
         private ListBox listBoxCoupJouee;
 
-        private void EcranPrincipal_Load(object sender, EventArgs e)
-        {
-            try
-            {
-                // Initialisation de l'échiquier
-                InitializeComponent();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Erreur lors du chargement de l'application : " + ex.Message);
-            }
-        }
 
-        /// <summary>
-        ///  Required method for Designer support - do not modify
-        ///  the contents of this method with the code editor.
-        /// </summary>
+        #region Initialisation des composants
         private void InitializeComponent()
         {
             //SuspendLayout() et ResumeLayout() sont utilisés pour optimiser les performances lors de la modification dynamique de la disposition des contrôles dans un formulaire.
             SuspendLayout();
             //Ecran
-            InitialiseWindow();
+            InitializeWindow();
             //Echiquier
             InitializeBoard();
-            InitialiseListBoxCoupJouee();
+            InitializeListBoxCoupJouee();
             ResumeLayout();
         }
-        private void InitialiseListBoxCoupJouee()
+        private void InitializeListBoxCoupJouee()
         {
             // Initialiser la ListBox pour afficher la liste des coups joués
             listBoxCoupJouee = new ListBox();
@@ -51,28 +36,6 @@ namespace EchecsCsharpProject
             listBoxCoupJouee.Width = 500;
             Controls.Add(listBoxCoupJouee);
         }
-        private void InitialiseWindow()
-        {
-            try
-            {
-                // 
-                // ecranPrincipal
-                // 
-                AutoScaleDimensions = new SizeF(7F, 15F);
-                AutoScaleMode = AutoScaleMode.Font;
-                Screen screen = Screen.PrimaryScreen;
-                ClientSize = new Size(screen.Bounds.Width * 3 / 4, screen.Bounds.Height * 3 / 4);
-                MinimumSize = new Size(Constantes.WIDTH_MIN_SIZE, Constantes.HEIGHT_MIN_SIZE);
-                Name = "Échiquier";
-                Resize += new EventHandler(ecranPrincipal_Resize);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Erreur lors de l'initialisation de la fenêtre principale : " + ex.Message);
-            }
-        }
-
-        // Création du damier de l'échiquier
         private void CreationGrid(TableLayoutPanel echiquierTab)
         {
             try
@@ -96,6 +59,65 @@ namespace EchecsCsharpProject
                 MessageBox.Show("Erreur lors de la création du damier de l'échiquier : " + ex.Message);
             }
         }
+        private void InitializeWindow()
+        {
+            try
+            {
+                // 
+                // ecranPrincipal
+                // 
+                AutoScaleDimensions = new SizeF(7F, 15F);
+                AutoScaleMode = AutoScaleMode.Font;
+                Screen screen = Screen.PrimaryScreen;
+                ClientSize = new Size(screen.Bounds.Width * 3 / 4, screen.Bounds.Height * 3 / 4);
+                MinimumSize = new Size(Constantes.WIDTH_MIN_SIZE, Constantes.HEIGHT_MIN_SIZE);
+                Name = "Échiquier";
+                Resize += new EventHandler(ecranPrincipal_Resize);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Erreur lors de l'initialisation de la fenêtre principale : " + ex.Message);
+            }
+        }
+        private void InitializeBoard()
+        {
+            try
+            {
+                echiquierTable = new TableLayoutPanel();
+
+                CreationGrid(echiquierTable);
+
+                Dictionary<string, string> piecesTrie = new Dictionary<string, string>()
+                    {
+                        { "RoiNoir", "" },
+                        { "ReineNoir", "" },
+                        { "FouNoir", "" },
+                        { "CavalierNoir", "" },
+                        { "TourNoir", "" },
+                        { "PionNoir", "" },
+                        { "RoiBlanc", "" },
+                        { "ReineBlanc", "" },
+                        { "FouBlanc", "" },
+                        { "CavalierBlanc", "" },
+                        { "TourBlanc", "" },
+                        { "PionBlanc", "" }
+                    };
+                InitializeDictionary(ref piecesTrie);
+
+                InitializePiecesPlacement(piecesTrie);
+
+                Controls.Add(echiquierTable);
+                ResizeEchiquier();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Erreur lors de l'initialisation de l'échiquier : " + ex.Message);
+            }
+        }
+        #endregion
+
+        #region Logique de l'échiquier
+        // Création du damier de l'échiquier
         private void InitializeDictionary(ref Dictionary<string, string> piecesTrie)
         {
             string[] pieces = null;
@@ -235,10 +257,63 @@ namespace EchecsCsharpProject
             }
         }
 
-        private bool IsMoveValid(int sourceX, int sourceY, int destinationX, int destinationY)
+        private bool IsMoveValid(Dictionary<string, object> source, Dictionary<string, object> destination)
         {
-            // Par exemple, vérifiez si le déplacement est d'une case en avant
-            return true; //destinationY == sourceY - 1 && destinationX == sourceX;
+            String nomPiece = (String)source.Values.ElementAt(0);
+            int[] xySource = new int[2] { (int)source.Values.ElementAt(1), (int)source.Values.ElementAt(2) };
+            int[] xyDestination = new int[2] { (int)destination.Values.ElementAt(1), (int)destination.Values.ElementAt(2) };
+
+            switch (nomPiece)
+            {
+                case "PionBlanc":
+                    // pos - 1 (en y)
+                    if (xySource[0] == xyDestination[0] && xySource[1] - 1 == xyDestination[1])
+                        return true;
+                    break;
+                case "PionNoir":
+                    // pos + 1 (en y)
+                    if (xySource[0] == xyDestination[0] && xySource[1] + 1 == xyDestination[1])
+                        return true;
+                    break;
+                case "TourBlanc":
+                case "TourNoir":
+                    // horizontalement ou verticalement
+                    if (xySource[0] == xyDestination[0] || xySource[1] == xyDestination[1])
+                        return true;
+                    break;
+                case "CavalierBlanc":
+                case "CavalierNoir":
+                    // déplacements pour le cavalier (en L)
+                    int deltaXCV = Math.Abs(xySource[0] - xyDestination[0]);
+                    int deltaYCV = Math.Abs(xySource[1] - xyDestination[1]);
+                    if ((deltaXCV == 1 && deltaYCV == 2) || (deltaXCV == 2 && deltaYCV == 1))
+                        return true;
+                    break;
+                case "FouBlanc":
+                case "FouNoir":
+                    // éplacements pour le fou (en diagonale)
+                    if (Math.Abs(xySource[0] - xyDestination[0]) == Math.Abs(xySource[1] - xyDestination[1]))
+                        return true;
+                    break;
+                case "ReineBlanc":
+                case "ReineNoir":
+                    // déplacements pour la reine (horizontalement, verticalement ou en diagonale)
+                    if ((xySource[0] == xyDestination[0] || xySource[1] == xyDestination[1]) || (Math.Abs(xySource[0] - xyDestination[0]) == Math.Abs(xySource[1] - xyDestination[1])))
+                        return true;
+                    break;
+                case "RoiBlanc":
+                case "RoiNoir":
+                    // Gérer les déplacements pour le roi (d'une case dans n'importe quelle direction)
+                    if (Math.Abs(xySource[0] - xyDestination[0]) <= 1 && Math.Abs(xySource[1] - xyDestination[1]) <= 1)
+                        return true;
+                    break;
+                default:
+                    break;
+            }
+
+
+
+            return false;
         }
 
         private void PictureBox_Click(object sender, EventArgs e)
@@ -253,24 +328,17 @@ namespace EchecsCsharpProject
                 // Aucune pièce sélectionnée, vérifier si la case cliquée contient une pièce
                 if ((String)pieceData.Values.ElementAt(0) != "CaseVide")
                 {
-                    // Sélectionner la pièce
                     selectedPictureBox = clickedPictureBox;
                     savePiece = pieceData; // Key, PositionX, PositionY
                 }
             }
             else
             {
-                // Une pièce est déjà sélectionnée, vérifier si le déplacement est valide
-                int sourceX = (int)savePiece.Values.ElementAt(1);
-                int sourceY = (int)savePiece.Values.ElementAt(2);
-                int destinationX = (int)pieceData.Values.ElementAt(1);
-                int destinationY = (int)pieceData.Values.ElementAt(2);
-
-                // Vérifier si le déplacement est valide (par exemple, déplacement d'une case en avant)
-                if (IsMoveValid(sourceX, sourceY, destinationX, destinationY))
+                // Vérifier si le déplacement est valide
+                if (IsMoveValid(savePiece, pieceData))
                 {
                     // Effectuer le déplacement de la pièce
-                    DeplacementPiece(selectedPictureBox, destinationX, destinationY);
+                    DeplacementPiece(selectedPictureBox, (int)pieceData.Values.ElementAt(1), (int)pieceData.Values.ElementAt(2));
 
                     // Réinitialiser la pièce sélectionnée
                     selectedPictureBox = null;
@@ -281,32 +349,27 @@ namespace EchecsCsharpProject
                     MessageBox.Show("Déplacement invalide !");
                 }
                 selectedPictureBox = null;
+                savePiece = null;
             }
         }
 
         private void DeplacementPiece(PictureBox sourcePictureBox, int destinationX, int destinationY)
         {
-            // Récupérer les données de la pièce
             Dictionary<string, object> pieceData = (Dictionary<string, object>)sourcePictureBox.Tag;
 
-            // Récupérer le Panel parent du PictureBox
             Panel sourcePanel = (Panel)sourcePictureBox.Parent;
-
-            // Supprimer le PictureBox du Panel actuel
             sourcePanel.Controls.Remove(sourcePictureBox);
 
-            // Obtenir le Panel de destination à partir du TableLayoutPanel
             Control destinationControl = echiquierTable.GetControlFromPosition(destinationX, destinationY);
 
-            // Vérifier si le contrôle de destination est un Panel
             if (destinationControl is Panel destinationPanel)
             {
-                // Créer un nouveau PictureBox pour la pièce déplacée
                 PictureBox destinationPictureBox = new PictureBox();
                 destinationPictureBox.Dock = DockStyle.Fill;
                 destinationPictureBox.SizeMode = PictureBoxSizeMode.StretchImage;
                 destinationPictureBox.Image = Image.FromFile((string)pieceData["ImageLink"]);
                 destinationPictureBox.Click += new EventHandler(PictureBox_Click);
+
                 // Créer un nouvel objet de données pour le nouveau PictureBox
                 Dictionary<string, object> destinationPieceData = new Dictionary<string, object>()
                 {
@@ -318,26 +381,23 @@ namespace EchecsCsharpProject
                 destinationPictureBox.Tag = destinationPieceData;
 
                 // Ajouter le nouveau PictureBox au Panel de la case de destination
-                destinationPanel.Controls.Remove(destinationPanel.Controls[1]);
+                if (destinationPanel.Controls.Count > 1)
+                    destinationPanel.Controls.Remove(destinationPanel.Controls[1]);
                 destinationPanel.Controls.Add(destinationPictureBox);
-
-                // Afficher un message indiquant le déplacement
+                
                 string destinationSquare = GetSquareName(destinationX, destinationY);
                 listeCoupJouee.Add("La pièce " + (string)pieceData["Key"] + " a été déplacée vers la case " + destinationSquare + ".");
-                // Mettre à jour la liste des coups joués dans la ListBox
                 listBoxCoupJouee.Items.Clear();
                 listBoxCoupJouee.Items.AddRange(listeCoupJouee.ToArray());
             }
             else
             {
-                // Afficher un message d'erreur si le contrôle de destination n'est pas un Panel
                 MessageBox.Show("Erreur : Le contrôle de destination n'est pas un Panel.");
             }
         }
+        #endregion
 
-
-
-
+        #region Méthodes utilitaires
         //Récupérer le nom de la case à partir des coordonnées
         private string GetSquareName(int x, int y)
         {
@@ -346,7 +406,6 @@ namespace EchecsCsharpProject
             int rank = 8 - y;
             return $"{file}{rank}";
         }
-
         private string GetKeyFromValue(Dictionary<string, string> dictionary, string value)
         {
             foreach (KeyValuePair<string, string> pair in dictionary)
@@ -359,39 +418,19 @@ namespace EchecsCsharpProject
             return "CaseVide";
         }
 
-        private void InitializeBoard()
+        #endregion
+
+        #region Gestion de l'écran
+        private void EcranPrincipal_Load(object sender, EventArgs e)
         {
             try
             {
-                echiquierTable = new TableLayoutPanel();
-
-                CreationGrid(echiquierTable);
-
-                Dictionary<string, string> piecesTrie = new Dictionary<string, string>()
-                    {
-                        { "RoiNoir", "" },
-                        { "ReineNoir", "" },
-                        { "FouNoir", "" },
-                        { "CavalierNoir", "" },
-                        { "TourNoir", "" },
-                        { "PionNoir", "" },
-                        { "RoiBlanc", "" },
-                        { "ReineBlanc", "" },
-                        { "FouBlanc", "" },
-                        { "CavalierBlanc", "" },
-                        { "TourBlanc", "" },
-                        { "PionBlanc", "" }
-                    };
-                InitializeDictionary(ref piecesTrie);
-
-                InitializePiecesPlacement(piecesTrie);
-
-                Controls.Add(echiquierTable);
-                ResizeEchiquier();
+                // Initialisation de l'échiquier
+                InitializeComponent();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Erreur lors de l'initialisation de l'échiquier : " + ex.Message);
+                MessageBox.Show("Erreur lors du chargement de l'application : " + ex.Message);
             }
         }
 
@@ -408,7 +447,9 @@ namespace EchecsCsharpProject
                 echiquierTable.Size = new Size(newSize, newSize);
             }
         }
+        #endregion
 
+        #region Autres
         private System.ComponentModel.IContainer components = null;
         /// <summary>
         ///  Clean up any resources being used.
@@ -422,5 +463,6 @@ namespace EchecsCsharpProject
             }
             base.Dispose(disposing);
         }
+        #endregion
     }
 }
