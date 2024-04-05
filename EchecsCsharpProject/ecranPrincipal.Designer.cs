@@ -328,6 +328,7 @@ namespace EchecsCsharpProject
                 // Aucune pièce sélectionnée, vérifier si la case cliquée contient une pièce
                 if ((String)pieceData.Values.ElementAt(0) != "CaseVide")
                 {
+                    AfficherDeplacementsPossibles(pieceData);
                     selectedPictureBox = clickedPictureBox;
                     savePiece = pieceData; // Key, PositionX, PositionY
                 }
@@ -339,10 +340,6 @@ namespace EchecsCsharpProject
                 {
                     // Effectuer le déplacement de la pièce
                     DeplacementPiece(selectedPictureBox, (int)pieceData.Values.ElementAt(1), (int)pieceData.Values.ElementAt(2));
-
-                    // Réinitialiser la pièce sélectionnée
-                    selectedPictureBox = null;
-                    savePiece = null;
                 }
                 else
                 {
@@ -350,6 +347,149 @@ namespace EchecsCsharpProject
                 }
                 selectedPictureBox = null;
                 savePiece = null;
+            }
+        }
+        private void AfficherDeplacementsPossibles(Dictionary<string, object> pieceData)
+        {
+            // Effacer les déplacements possibles précédents en réinitialisant les couleurs de toutes les cases
+            foreach (Control control in echiquierTable.Controls)
+            {
+                if (control is Panel panel)
+                {
+                    panel.BackColor = (panel.BackColor == Color.LightGreen || panel.BackColor == Color.LightBlue) ? (panel.BackColor == Color.LightGreen ? Color.White : Color.Gray) : panel.BackColor;
+                }
+            }
+
+            // Récupérer les informations sur la pièce sélectionnée
+            string nomPiece = (string)pieceData["Key"];
+            int positionX = (int)pieceData["PositionX"];
+            int positionY = (int)pieceData["PositionY"];
+
+            // Calculer et afficher les déplacements possibles
+            switch (nomPiece)
+            {
+                case "PionBlanc":
+                    // Vérifier si le déplacement d'une case en avant est possible
+                    int destinationY = positionY - 1;
+                    if (destinationY >= 0)
+                    {
+                        Panel destinationPanel = (Panel)echiquierTable.GetControlFromPosition(positionX, destinationY);
+                        destinationPanel.BackColor = Color.LightGreen;
+                    }
+                    break;
+                case "PionNoir":
+                    // Vérifier si le déplacement d'une case en avant est possible
+                    destinationY = positionY + 1;
+                    if (destinationY < 8)
+                    {
+                        Panel destinationPanel = (Panel)echiquierTable.GetControlFromPosition(positionX, destinationY);
+                        destinationPanel.BackColor = Color.LightGreen;
+                    }
+                    break;
+                case "TourBlanc":
+                case "TourNoir":
+                    // Déplacements horizontaux et verticaux possibles
+                    for (int i = 0; i < nbXYlenght; i++)
+                    {
+                        if (i != positionX)
+                        {
+                            Panel destinationPanelHorizontal = (Panel)echiquierTable.GetControlFromPosition(i, positionY);
+                            destinationPanelHorizontal.BackColor = Color.LightGreen;
+                        }
+                        if (i != positionY)
+                        {
+                            Panel destinationPanelVertical = (Panel)echiquierTable.GetControlFromPosition(positionX, i);
+                            destinationPanelVertical.BackColor = Color.LightGreen;
+                        }
+                    }
+                    break;
+                case "CavalierBlanc":
+                case "CavalierNoir":
+                    // Déplacements en L possibles
+                    int[] deltaX = { 1, 2, 2, 1, -1, -2, -2, -1 };
+                    int[] deltaY = { 2, 1, -1, -2, -2, -1, 1, 2 };
+                    for (int i = 0; i < 8; i++)
+                    {
+                        int newX = positionX + deltaX[i];
+                        int newY = positionY + deltaY[i];
+                        if (newX >= 0 && newX < nbXYlenght && newY >= 0 && newY < nbXYlenght)
+                        {
+                            Panel destinationPanel = (Panel)echiquierTable.GetControlFromPosition(newX, newY);
+                            destinationPanel.BackColor = Color.LightGreen;
+                        }
+                    }
+                    break;
+                case "FouBlanc":
+                case "FouNoir":
+                    // Déplacements diagonaux possibles
+                    for (int i = -7; i < 8; i++)
+                    {
+                        int newX = positionX + i;
+                        int newY = positionY + i;
+                        if (newX >= 0 && newX < nbXYlenght && newY >= 0 && newY < nbXYlenght)
+                        {
+                            Panel destinationPanel = (Panel)echiquierTable.GetControlFromPosition(newX, newY);
+                            destinationPanel.BackColor = Color.LightGreen;
+                        }
+                        newX = positionX - i;
+                        newY = positionY + i;
+                        if (newX >= 0 && newX < nbXYlenght && newY >= 0 && newY < nbXYlenght)
+                        {
+                            Panel destinationPanel = (Panel)echiquierTable.GetControlFromPosition(newX, newY);
+                            destinationPanel.BackColor = Color.LightGreen;
+                        }
+                    }
+                    break;
+                case "ReineBlanc":
+                case "ReineNoir":
+                    // Déplacements horizontaux, verticaux et diagonaux possibles
+                    for (int i = 0; i < nbXYlenght; i++)
+                    {
+                        if (i != positionX)
+                        {
+                            Panel destinationPanelHorizontal = (Panel)echiquierTable.GetControlFromPosition(i, positionY);
+                            destinationPanelHorizontal.BackColor = Color.LightGreen;
+                        }
+                        if (i != positionY)
+                        {
+                            Panel destinationPanelVertical = (Panel)echiquierTable.GetControlFromPosition(positionX, i);
+                            destinationPanelVertical.BackColor = Color.LightGreen;
+                        }
+                        int newX = positionX + i;
+                        int newY = positionY + i;
+                        if (newX >= 0 && newX < nbXYlenght && newY >= 0 && newY < nbXYlenght)
+                        {
+                            Panel destinationPanelDiagonal1 = (Panel)echiquierTable.GetControlFromPosition(newX, newY);
+                            destinationPanelDiagonal1.BackColor = Color.LightGreen;
+                        }
+                        newX = positionX - i;
+                        newY = positionY + i;
+                        if (newX >= 0 && newX < nbXYlenght && newY >= 0 && newY < nbXYlenght)
+                        {
+                            Panel destinationPanelDiagonal2 = (Panel)echiquierTable.GetControlFromPosition(newX, newY);
+                            destinationPanelDiagonal2.BackColor = Color.LightGreen;
+                        }
+                    }
+                    break;
+                case "RoiBlanc":
+                case "RoiNoir":
+                    // Déplacements possibles dans toutes les directions
+                    for (int i = -1; i <= 1; i++)
+                    {
+                        for (int j = -1; j <= 1; j++)
+                        {
+                            int newX = positionX + i;
+                            int newY = positionY + j;
+                            if (newX >= 0 && newX < nbXYlenght && newY >= 0 && newY < nbXYlenght)
+                            {
+                                Panel destinationPanel = (Panel)echiquierTable.GetControlFromPosition(newX, newY);
+                                destinationPanel.BackColor = Color.LightGreen;
+                            }
+                        }
+                    }
+                    break;
+                default:
+                    break;
             }
         }
 
