@@ -14,6 +14,7 @@ namespace EchecsCsharpProject
         private Dictionary<string, object> savePiece = null;
         private List<String> listeCoupJouee = new List<string>();
         private ListBox listBoxCoupJouee;
+        private bool isWhiteTurn = true;
 
 
         #region Initialisation des composants
@@ -114,10 +115,6 @@ namespace EchecsCsharpProject
                 MessageBox.Show("Erreur lors de l'initialisation de l'échiquier : " + ex.Message);
             }
         }
-        #endregion
-
-        #region Logique de l'échiquier
-        // Création du damier de l'échiquier
         private void InitializeDictionary(ref Dictionary<string, string> piecesTrie)
         {
             string[] pieces = null;
@@ -163,10 +160,9 @@ namespace EchecsCsharpProject
                         piecesTrie["TourNoir"] = pieces[k];
                     else if (pieces[k].Contains("Pion"))
                         piecesTrie["PionNoir"] = pieces[k];
-                }               
+                }
             }
         }
-        //Initialisation des pièces sur l'échiquier
         private void InitializePiecesPlacement(Dictionary<string, string> piecesTrie)
         {
             try
@@ -256,12 +252,18 @@ namespace EchecsCsharpProject
                 MessageBox.Show("Erreur lors de l'initialisation des pièces sur l'échiquier : " + ex.Message);
             }
         }
+        #endregion
 
+        #region Logique de l'échiquier
         private bool IsMoveValid(Dictionary<string, object> source, Dictionary<string, object> destination)
         {
             String nomPiece = (String)source.Values.ElementAt(0);
             int[] xySource = new int[2] { (int)source.Values.ElementAt(1), (int)source.Values.ElementAt(2) };
             int[] xyDestination = new int[2] { (int)destination.Values.ElementAt(1), (int)destination.Values.ElementAt(2) };
+
+            if (xySource[0] == xyDestination[0] && xySource[1] == xyDestination[1])
+                return false;
+
 
             switch (nomPiece)
             {
@@ -315,13 +317,14 @@ namespace EchecsCsharpProject
 
             return false;
         }
-
         private void PictureBox_Click(object sender, EventArgs e)
         {
-            // Quand on clique sur une pièce, on récupère le nom de l'image et on peut la déplacer d'une case en avant et si on clique sur une case où il n'y a pas de pièce, on ne fait rien
+            ReinitialiserCouleursFondEchiquier();
+
+            // Quand on clique sur une pièce, on récupère le nom de l'image et on peut la déplacer et si on clique sur une case où il n'y a pas de pièce, on ne fait rien
             PictureBox clickedPictureBox = (PictureBox)sender;
             Dictionary<string, object> pieceData = (Dictionary<string, object>)clickedPictureBox.Tag;
-
+             
             //Piece sélectionnée ?
             if (selectedPictureBox == null && savePiece == null)
             {
@@ -336,29 +339,20 @@ namespace EchecsCsharpProject
             else
             {
                 // Vérifier si le déplacement est valide
-                if (IsMoveValid(savePiece, pieceData))
-                {
-                    // Effectuer le déplacement de la pièce
-                    DeplacementPiece(selectedPictureBox, (int)pieceData.Values.ElementAt(1), (int)pieceData.Values.ElementAt(2));
-                }
-                else
-                {
-                    MessageBox.Show("Déplacement invalide !");
-                }
+                String pieceSource = (String)savePiece.Values.ElementAt(0);
+                String pieceDestination = (String)pieceData.Values.ElementAt(0);
+                if (pieceSource.Contains("Blanc") && pieceDestination.Contains("Noir") || pieceSource.Contains("Noir") && pieceDestination.Contains("Blanc") || pieceDestination == "CaseVide")
+                    if (IsMoveValid(savePiece, pieceData))
+                        // Effectuer le déplacement de la pièce
+                        DeplacementPiece(selectedPictureBox, (int)pieceData.Values.ElementAt(1), (int)pieceData.Values.ElementAt(2));
+                ReinitialiserCouleursFondEchiquier();
                 selectedPictureBox = null;
                 savePiece = null;
             }
         }
         private void AfficherDeplacementsPossibles(Dictionary<string, object> pieceData)
         {
-            // Effacer les déplacements possibles précédents en réinitialisant les couleurs de toutes les cases
-            foreach (Control control in echiquierTable.Controls)
-            {
-                if (control is Panel panel)
-                {
-                    panel.BackColor = (panel.BackColor == Color.LightGreen || panel.BackColor == Color.LightBlue) ? (panel.BackColor == Color.LightGreen ? Color.White : Color.Gray) : panel.BackColor;
-                }
-            }
+            ReinitialiserCouleursFondEchiquier();
 
             // Récupérer les informations sur la pièce sélectionnée
             string nomPiece = (string)pieceData["Key"];
@@ -492,7 +486,6 @@ namespace EchecsCsharpProject
                     break;
             }
         }
-
         private void DeplacementPiece(PictureBox sourcePictureBox, int destinationX, int destinationY)
         {
             Dictionary<string, object> pieceData = (Dictionary<string, object>)sourcePictureBox.Tag;
@@ -538,6 +531,29 @@ namespace EchecsCsharpProject
         #endregion
 
         #region Méthodes utilitaires
+
+        private void ReinitialiserCouleursFondEchiquier()
+        {
+            try
+            {
+                for (int i = 0; i < nbXYlenght; i++)
+                {
+                    for (int j = 0; j < nbXYlenght; j++)
+                    {
+                        // Récupérer le contrôle de type Panel pour chaque case de l'échiquier
+                        Control control = echiquierTable.GetControlFromPosition(i, j);
+                        if (control is Panel panel)
+                            panel.BackColor = (i + j) % 2 == 0 ? Color.White : Color.Gray;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Erreur lors de la réinitialisation des couleurs de fond de l'échiquier : " + ex.Message);
+            }
+        }
+
+
         //Récupérer le nom de la case à partir des coordonnées
         private string GetSquareName(int x, int y)
         {
