@@ -14,8 +14,8 @@ namespace EchecsCsharpProject
         private Dictionary<string, object> savePiece = null;
         private List<String> listeCoupJouee = new List<string>();
         private ListBox listBoxCoupJouee;
+        private Label labelTourDeJeu;
         private bool isWhiteTurn = true;
-
 
         #region Initialisation des composants
         private void InitializeComponent()
@@ -26,8 +26,18 @@ namespace EchecsCsharpProject
             InitializeWindow();
             //Echiquier
             InitializeBoard();
+            InitialiserLabelTourDeJeu();
             InitializeListBoxCoupJouee();
             ResumeLayout();
+        }
+        private void InitialiserLabelTourDeJeu()
+        {
+            labelTourDeJeu = new Label();
+            labelTourDeJeu.Text = $"Tour de jeu : {(isWhiteTurn ? "Blanc" : "Noir")}";
+            labelTourDeJeu.Dock = DockStyle.Right;
+            labelTourDeJeu.Width = 100;
+            labelTourDeJeu.TextAlign = ContentAlignment.MiddleCenter;
+            Controls.Add(labelTourDeJeu);
         }
         private void InitializeListBoxCoupJouee()
         {
@@ -326,25 +336,36 @@ namespace EchecsCsharpProject
             Dictionary<string, object> pieceData = (Dictionary<string, object>)clickedPictureBox.Tag;
              
             //Piece sélectionnée ?
+            //Non : on vérifie si la case cliquée contient une pièce
             if (selectedPictureBox == null && savePiece == null)
             {
-                // Aucune pièce sélectionnée, vérifier si la case cliquée contient une pièce
+                // vérifier si la case cliquée contient une pièce
                 if ((String)pieceData.Values.ElementAt(0) != "CaseVide")
                 {
-                    AfficherDeplacementsPossibles(pieceData);
-                    selectedPictureBox = clickedPictureBox;
-                    savePiece = pieceData; // Key, PositionX, PositionY
+                    if (isWhiteTurn && ((String)pieceData.Values.ElementAt(0)).Contains("Blanc") || isWhiteTurn == false && ((String)pieceData.Values.ElementAt(0)).Contains("Noir"))
+                    {
+                        AfficherDeplacementsPossibles(pieceData);
+                        selectedPictureBox = clickedPictureBox;
+                        savePiece = pieceData; // Key, PositionX, PositionY
+                    }
                 }
             }
+            //Oui : on vérifie si le déplacement est valide
             else
             {
-                // Vérifier si le déplacement est valide
                 String pieceSource = (String)savePiece.Values.ElementAt(0);
                 String pieceDestination = (String)pieceData.Values.ElementAt(0);
-                if (pieceSource.Contains("Blanc") && pieceDestination.Contains("Noir") || pieceSource.Contains("Noir") && pieceDestination.Contains("Blanc") || pieceDestination == "CaseVide")
+                if (pieceSource.Contains("Blanc") && pieceDestination.Contains("Noir") || 
+                    pieceSource.Contains("Noir") && pieceDestination.Contains("Blanc") || 
+                    pieceDestination == "CaseVide")
                     if (IsMoveValid(savePiece, pieceData))
+                    {
                         // Effectuer le déplacement de la pièce
                         DeplacementPiece(selectedPictureBox, (int)pieceData.Values.ElementAt(1), (int)pieceData.Values.ElementAt(2));
+                        isWhiteTurn = !isWhiteTurn;
+                        labelTourDeJeu.Text = $"Tour de jeu : {(isWhiteTurn ? "Blanc" : "Noir")}";
+                        labelTourDeJeu.Refresh();
+                    }
                 ReinitialiserCouleursFondEchiquier();
                 selectedPictureBox = null;
                 savePiece = null;
