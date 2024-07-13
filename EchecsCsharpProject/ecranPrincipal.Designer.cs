@@ -1,4 +1,5 @@
 ﻿using Commun;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 
 namespace EchecsCsharpProject
@@ -9,7 +10,7 @@ namespace EchecsCsharpProject
         ///  Required designer variable.
         /// </summary>
         private TableLayoutPanel echiquierTable;
-        private const int nbXYlenght = 8;
+        private const int nbXYlength = 8;
         private PictureBox selectedPictureBox = null;
         private Dictionary<string, object> savePiece = null;
         private List<String> listeCoupJouee = new List<string>();
@@ -51,18 +52,18 @@ namespace EchecsCsharpProject
         {
             try
             {
-                echiquierTable.ColumnCount = nbXYlenght;
+                echiquierTable.ColumnCount = nbXYlength;
                 echiquierTable.Name = "echiquierTable";
-                echiquierTable.RowCount = nbXYlenght;
+                echiquierTable.RowCount = nbXYlength;
                 echiquierTable.TabIndex = 0;
 
-                for (int i = 0; i < nbXYlenght; i++)
+                for (int i = 0; i < nbXYlength; i++)
                 {
-                    echiquierTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F / nbXYlenght));
+                    echiquierTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F / nbXYlength));
                 }
-                for (int i = 0; i < nbXYlenght; i++)
+                for (int i = 0; i < nbXYlength; i++)
                 {
-                    echiquierTable.RowStyles.Add(new RowStyle(SizeType.Percent, 100F / nbXYlenght));
+                    echiquierTable.RowStyles.Add(new RowStyle(SizeType.Percent, 100F / nbXYlength));
                 }
             }
             catch (Exception ex)
@@ -100,18 +101,18 @@ namespace EchecsCsharpProject
 
                 Dictionary<string, string> piecesTrie = new Dictionary<string, string>()
                     {
-                        { "RoiNoir", "" },
-                        { "ReineNoir", "" },
-                        { "FouNoir", "" },
-                        { "CavalierNoir", "" },
-                        { "TourNoir", "" },
-                        { "PionNoir", "" },
-                        { "RoiBlanc", "" },
-                        { "ReineBlanc", "" },
-                        { "FouBlanc", "" },
-                        { "CavalierBlanc", "" },
-                        { "TourBlanc", "" },
-                        { "PionBlanc", "" }
+                        { "RoiNoir", null },
+                        { "ReineNoir", null },
+                        { "FouNoir", null },
+                        { "CavalierNoir", null },
+                        { "TourNoir", null },
+                        { "PionNoir", null },
+                        { "RoiBlanc", null },
+                        { "ReineBlanc", null },
+                        { "FouBlanc", null },
+                        { "CavalierBlanc", null },
+                        { "TourBlanc", null },
+                        { "PionBlanc", null }
                     };
                 InitializeDictionary(ref piecesTrie);
 
@@ -177,9 +178,9 @@ namespace EchecsCsharpProject
         {
             try
             {
-                for (int i = 0; i < nbXYlenght; i++)
+                for (int i = 0; i < nbXYlength; i++)
                 {
-                    for (int j = 0; j < nbXYlenght; j++)
+                    for (int j = 0; j < nbXYlength; j++)
                     {
                         //Création d'un panel pour chaque case de l'échiquier
                         Panel panel = new Panel();
@@ -194,11 +195,12 @@ namespace EchecsCsharpProject
                         PictureBox pictureBox = new PictureBox();
                         pictureBox.Dock = DockStyle.Fill;
                         pictureBox.SizeMode = PictureBoxSizeMode.StretchImage;
+                        pictureBox.Image = null;
 
                         //une fois les images triées, on les ajoute les pieces aux bonnes cases de l'échiquier
                         // pion (1, *), tour (0, 0), cavalier (0, 1), fou (0, 2), reine (0, 3), roi (0, 4), fou (0, 5), cavalier (0, 6), tour (0, 7)
                         // pion (6, *), tour (7, 0), cavalier (7, 1), fou (7, 2), reine (7, 3), roi (7, 4), fou (7, 5), cavalier (7, 6), tour (7, 7)
-                        string pieceName = "";
+                        string pieceName = null;
                         if (j == 1)
                             pieceName = piecesTrie["PionNoir"];
                         else if (j == 0)
@@ -237,9 +239,9 @@ namespace EchecsCsharpProject
                                 pieceName = piecesTrie["CavalierBlanc"];
                             else
                                 pieceName = piecesTrie["TourBlanc"];
-                        if (pieceName != "")
+                        if (pieceName != null)
                             pictureBox.Image = Image.FromFile(pieceName);
-                        object data = new object();
+
                         Dictionary<string, object> datas = new Dictionary<string, object>()
                         {
                             { "Key", GetKeyFromValue(piecesTrie, pieceName) },
@@ -277,44 +279,46 @@ namespace EchecsCsharpProject
 
             switch (nomPiece)
             {
-                case "PionBlanc":
+                case Constantes.PION_B:
                     // pos - 1 (en y)
                     if (xySource[0] == xyDestination[0] && xySource[1] - 1 == xyDestination[1])
                         return true;
                     break;
-                case "PionNoir":
+                case Constantes.PION_N:
                     // pos + 1 (en y)
                     if (xySource[0] == xyDestination[0] && xySource[1] + 1 == xyDestination[1])
                         return true;
                     break;
-                case "TourBlanc":
-                case "TourNoir":
+                case Constantes.TOUR_B:
+                case Constantes.TOUR_N:
                     // horizontalement ou verticalement
                     if (xySource[0] == xyDestination[0] || xySource[1] == xyDestination[1])
                         return true;
                     break;
-                case "CavalierBlanc":
-                case "CavalierNoir":
+                case Constantes.CAVALIER_B:
+                case Constantes.CAVALIER_N:
                     // déplacements pour le cavalier (en L)
                     int deltaXCV = Math.Abs(xySource[0] - xyDestination[0]);
                     int deltaYCV = Math.Abs(xySource[1] - xyDestination[1]);
                     if ((deltaXCV == 1 && deltaYCV == 2) || (deltaXCV == 2 && deltaYCV == 1))
                         return true;
                     break;
-                case "FouBlanc":
-                case "FouNoir":
+                case Constantes.FOU_B:
+                case Constantes.FOU_N:
                     // éplacements pour le fou (en diagonale)
                     if (Math.Abs(xySource[0] - xyDestination[0]) == Math.Abs(xySource[1] - xyDestination[1]))
                         return true;
                     break;
-                case "ReineBlanc":
-                case "ReineNoir":
+                case Constantes.REINE_B:
+                case Constantes.REINE_N:
                     // déplacements pour la reine (horizontalement, verticalement ou en diagonale)
-                    if ((xySource[0] == xyDestination[0] || xySource[1] == xyDestination[1]) || (Math.Abs(xySource[0] - xyDestination[0]) == Math.Abs(xySource[1] - xyDestination[1])))
+                    if ((xySource[0] == xyDestination[0] || // horizontalement
+                        xySource[1] == xyDestination[1]) || // verticalement
+                        (Math.Abs(xySource[0] - xyDestination[0]) == Math.Abs(xySource[1] - xyDestination[1]))) // en diagonale
                         return true;
                     break;
-                case "RoiBlanc":
-                case "RoiNoir":
+                case Constantes.ROI_B:
+                case Constantes.ROI_N:
                     // Gérer les déplacements pour le roi (d'une case dans n'importe quelle direction)
                     if (Math.Abs(xySource[0] - xyDestination[0]) <= 1 && Math.Abs(xySource[1] - xyDestination[1]) <= 1)
                         return true;
@@ -383,7 +387,7 @@ namespace EchecsCsharpProject
             // Calculer et afficher les déplacements possibles
             switch (nomPiece)
             {
-                case "PionBlanc":
+                case Constantes.PION_B:
                     // Vérifier si le déplacement d'une case en avant est possible
                     int destinationY = positionY - 1;
                     if (destinationY >= 0)
@@ -392,7 +396,7 @@ namespace EchecsCsharpProject
                         destinationPanel.BackColor = Color.LightGreen;
                     }
                     break;
-                case "PionNoir":
+                case Constantes.PION_N:
                     // Vérifier si le déplacement d'une case en avant est possible
                     destinationY = positionY + 1;
                     if (destinationY < 8)
@@ -401,10 +405,14 @@ namespace EchecsCsharpProject
                         destinationPanel.BackColor = Color.LightGreen;
                     }
                     break;
-                case "TourBlanc":
-                case "TourNoir":
+                case Constantes.TOUR_B:
+                case Constantes.TOUR_N:
                     // Déplacements horizontaux et verticaux possibles
-                    for (int i = 0; i < nbXYlenght; i++)
+
+                    // Controls.Count = 1 : le label de la case
+                    // Controls.Count = 2 : le label de la case et l'image de la pièce
+                    // Old code
+                    for (int i = 0; i < nbXYlength; i++)
                     {
                         if (i != positionX)
                         {
@@ -418,8 +426,8 @@ namespace EchecsCsharpProject
                         }
                     }
                     break;
-                case "CavalierBlanc":
-                case "CavalierNoir":
+                case Constantes.CAVALIER_B:
+                case Constantes.CAVALIER_N:
                     // Déplacements en L possibles
                     int[] deltaX = { 1, 2, 2, 1, -1, -2, -2, -1 };
                     int[] deltaY = { 2, 1, -1, -2, -2, -1, 1, 2 };
@@ -427,38 +435,38 @@ namespace EchecsCsharpProject
                     {
                         int newX = positionX + deltaX[i];
                         int newY = positionY + deltaY[i];
-                        if (newX >= 0 && newX < nbXYlenght && newY >= 0 && newY < nbXYlenght)
+                        if (newX >= 0 && newX < nbXYlength && newY >= 0 && newY < nbXYlength)
                         {
                             Panel destinationPanel = (Panel)echiquierTable.GetControlFromPosition(newX, newY);
                             destinationPanel.BackColor = Color.LightGreen;
                         }
                     }
                     break;
-                case "FouBlanc":
-                case "FouNoir":
+                case Constantes.FOU_B:
+                case Constantes.FOU_N:
                     // Déplacements diagonaux possibles
                     for (int i = -7; i < 8; i++)
                     {
                         int newX = positionX + i;
                         int newY = positionY + i;
-                        if (newX >= 0 && newX < nbXYlenght && newY >= 0 && newY < nbXYlenght)
+                        if (newX >= 0 && newX < nbXYlength && newY >= 0 && newY < nbXYlength)
                         {
                             Panel destinationPanel = (Panel)echiquierTable.GetControlFromPosition(newX, newY);
                             destinationPanel.BackColor = Color.LightGreen;
                         }
                         newX = positionX - i;
                         newY = positionY + i;
-                        if (newX >= 0 && newX < nbXYlenght && newY >= 0 && newY < nbXYlenght)
+                        if (newX >= 0 && newX < nbXYlength && newY >= 0 && newY < nbXYlength)
                         {
                             Panel destinationPanel = (Panel)echiquierTable.GetControlFromPosition(newX, newY);
                             destinationPanel.BackColor = Color.LightGreen;
                         }
                     }
                     break;
-                case "ReineBlanc":
-                case "ReineNoir":
+                case Constantes.REINE_B:
+                case Constantes.REINE_N:
                     // Déplacements horizontaux, verticaux et diagonaux possibles
-                    for (int i = 0; i < nbXYlenght; i++)
+                    for (int i = 0; i < nbXYlength; i++)
                     {
                         if (i != positionX)
                         {
@@ -472,22 +480,22 @@ namespace EchecsCsharpProject
                         }
                         int newX = positionX + i;
                         int newY = positionY + i;
-                        if (newX >= 0 && newX < nbXYlenght && newY >= 0 && newY < nbXYlenght)
+                        if (newX >= 0 && newX < nbXYlength && newY >= 0 && newY < nbXYlength)
                         {
                             Panel destinationPanelDiagonal1 = (Panel)echiquierTable.GetControlFromPosition(newX, newY);
                             destinationPanelDiagonal1.BackColor = Color.LightGreen;
                         }
                         newX = positionX - i;
                         newY = positionY + i;
-                        if (newX >= 0 && newX < nbXYlenght && newY >= 0 && newY < nbXYlenght)
+                        if (newX >= 0 && newX < nbXYlength && newY >= 0 && newY < nbXYlength)
                         {
                             Panel destinationPanelDiagonal2 = (Panel)echiquierTable.GetControlFromPosition(newX, newY);
                             destinationPanelDiagonal2.BackColor = Color.LightGreen;
                         }
                     }
                     break;
-                case "RoiBlanc":
-                case "RoiNoir":
+                case Constantes.ROI_B:
+                case Constantes.ROI_N:
                     // Déplacements possibles dans toutes les directions
                     for (int i = -1; i <= 1; i++)
                     {
@@ -495,7 +503,7 @@ namespace EchecsCsharpProject
                         {
                             int newX = positionX + i;
                             int newY = positionY + j;
-                            if (newX >= 0 && newX < nbXYlenght && newY >= 0 && newY < nbXYlenght)
+                            if (newX >= 0 && newX < nbXYlength && newY >= 0 && newY < nbXYlength)
                             {
                                 Panel destinationPanel = (Panel)echiquierTable.GetControlFromPosition(newX, newY);
                                 destinationPanel.BackColor = Color.LightGreen;
@@ -507,48 +515,50 @@ namespace EchecsCsharpProject
                     break;
             }
         }
+
         private void DeplacementPiece(PictureBox sourcePictureBox, int destinationX, int destinationY)
         {
+            // Récupérer les informations sur la pièce à déplacer
             Dictionary<string, object> pieceData = (Dictionary<string, object>)sourcePictureBox.Tag;
 
-            Panel sourcePanel = (Panel)sourcePictureBox.Parent;
-            sourcePanel.Controls.Remove(sourcePictureBox);
+            // Old Positions de la pièce
+            int sourceX = (int)pieceData["PositionX"];
+            int sourceY = (int)pieceData["PositionY"];
 
-            Control destinationControl = echiquierTable.GetControlFromPosition(destinationX, destinationY);
+            // Get le Panel où la nouvelle pièce va être
+            Panel destinationPanel = (Panel)echiquierTable.GetControlFromPosition(destinationX, destinationY);
+            // Get la PictureBox de la nouvelle case
+            PictureBox destinationPictureBox = (PictureBox)destinationPanel.Controls[1];
 
-            if (destinationControl is Panel destinationPanel)
+            // Informations sur la pièce à déplacer mises à jour
+            Dictionary<string, object> destinationPieceTag = new Dictionary<string, object>()
             {
-                PictureBox destinationPictureBox = new PictureBox();
-                destinationPictureBox.Dock = DockStyle.Fill;
-                destinationPictureBox.SizeMode = PictureBoxSizeMode.StretchImage;
-                destinationPictureBox.Image = Image.FromFile((string)pieceData["ImageLink"]);
-                destinationPictureBox.Click += new EventHandler(PictureBox_Click);
-
-                // Créer un nouvel objet de données pour le nouveau PictureBox
-                Dictionary<string, object> destinationPieceData = new Dictionary<string, object>()
-                {
-                    { "Key", pieceData["Key"] },
-                    { "PositionX", destinationX },
-                    { "PositionY", destinationY },
-                    { "ImageLink", pieceData["ImageLink"] }
-                };
-                destinationPictureBox.Tag = destinationPieceData;
-
-                // Ajouter le nouveau PictureBox au Panel de la case de destination
-                if (destinationPanel.Controls.Count > 1)
-                    destinationPanel.Controls.Remove(destinationPanel.Controls[1]);
-                destinationPanel.Controls.Add(destinationPictureBox);
-                
-                string destinationSquare = GetSquareName(destinationX, destinationY);
-                listeCoupJouee.Add("La pièce " + (string)pieceData["Key"] + " a été déplacée vers la case " + destinationSquare + ".");
-                listBoxCoupJouee.Items.Clear();
-                listBoxCoupJouee.Items.AddRange(listeCoupJouee.ToArray());
-            }
-            else
+                { "Key", pieceData["Key"] },
+                { "PositionX", destinationX },
+                { "PositionY", destinationY },
+                { "ImageLink", pieceData["ImageLink"] }
+            };
+            destinationPictureBox.Tag = destinationPieceTag;
+            destinationPictureBox.Image = Image.FromFile((string)pieceData["ImageLink"]);
+            
+            // Supprimer l'image et le tag de l'ancienne case
+            Dictionary<string, object> previousPieceTag = new Dictionary<string, object>()
             {
-                MessageBox.Show("Erreur : Le contrôle de destination n'est pas un Panel.");
-            }
+                { "Key", "CaseVide" },
+                { "PositionX", pieceData["PositionX"] },
+                { "PositionY", pieceData["PositionY"] },
+                { "ImageLink", null }
+            };
+            sourcePictureBox.Tag = previousPieceTag;
+            sourcePictureBox.Image = null;
+
+            // Informations sur la partie
+            string destinationSquare = GetSquareName(destinationX, destinationY);
+            listeCoupJouee.Add("La pièce " + (string)pieceData["Key"] + " a été déplacée vers la case " + destinationSquare + ".");
+            listBoxCoupJouee.Items.Clear();
+            listBoxCoupJouee.Items.AddRange(listeCoupJouee.ToArray());
         }
+
         #endregion
 
         #region Méthodes utilitaires
@@ -557,9 +567,9 @@ namespace EchecsCsharpProject
         {
             try
             {
-                for (int i = 0; i < nbXYlenght; i++)
+                for (int i = 0; i < nbXYlength; i++)
                 {
-                    for (int j = 0; j < nbXYlenght; j++)
+                    for (int j = 0; j < nbXYlength; j++)
                     {
                         // Récupérer le contrôle de type Panel pour chaque case de l'échiquier
                         Control control = echiquierTable.GetControlFromPosition(i, j);
