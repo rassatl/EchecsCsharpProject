@@ -186,6 +186,7 @@ namespace EchecsCsharpProject
                         Panel panel = new Panel();
                         panel.Dock = DockStyle.Fill;
                         panel.BackColor = (i + j) % 2 == 0 ? Color.White : Color.Gray;
+                        panel.Paint += new PaintEventHandler(Panel_Paint);
 
                         Label label = new Label();
                         label.Text = GetSquareName(i, j);
@@ -375,6 +376,28 @@ namespace EchecsCsharpProject
                 savePiece = null;
             }
         }
+        private void Panel_Paint(object sender, PaintEventArgs e)
+        {
+            Panel panel = (Panel)sender;
+            if (panel.BackColor == Color.Transparent)
+            {
+                using (SolidBrush brush = new SolidBrush(Color.LightGreen))
+                {
+                    int diameter = Math.Min(panel.Width, panel.Height) - 45;
+                    int x = (panel.Width - diameter) / 2;
+                    int y = (panel.Height - diameter) / 2;
+                    e.Graphics.FillEllipse(brush, x, y, diameter, diameter);
+                }
+            }
+        }
+        private void HighlightPanel(Panel panel)
+        {
+            if (panel != null)
+            {
+                panel.BackColor = Color.Transparent;
+                panel.Invalidate();
+            }
+        }
         private void AfficherDeplacementsPossibles(Dictionary<string, object> pieceData)
         {
             ReinitialiserCouleursFondEchiquier();
@@ -393,7 +416,7 @@ namespace EchecsCsharpProject
                     if (destinationY >= 0)
                     {
                         Panel destinationPanel = (Panel)echiquierTable.GetControlFromPosition(positionX, destinationY);
-                        destinationPanel.BackColor = Color.LightGreen;
+                        HighlightPanel(destinationPanel);
                     }
                     break;
                 case Constantes.PION_N:
@@ -402,27 +425,23 @@ namespace EchecsCsharpProject
                     if (destinationY < 8)
                     {
                         Panel destinationPanel = (Panel)echiquierTable.GetControlFromPosition(positionX, destinationY);
-                        destinationPanel.BackColor = Color.LightGreen;
+                        HighlightPanel(destinationPanel);
                     }
                     break;
                 case Constantes.TOUR_B:
                 case Constantes.TOUR_N:
                     // Déplacements horizontaux et verticaux possibles
-
-                    // Controls.Count = 1 : le label de la case
-                    // Controls.Count = 2 : le label de la case et l'image de la pièce
-                    // Old code
-                    for (int i = 0; i < nbXYlength; i++)
+                    for (int i = 0; i < 8; i++)
                     {
                         if (i != positionX)
                         {
                             Panel destinationPanelHorizontal = (Panel)echiquierTable.GetControlFromPosition(i, positionY);
-                            destinationPanelHorizontal.BackColor = Color.LightGreen;
+                            HighlightPanel(destinationPanelHorizontal);
                         }
                         if (i != positionY)
                         {
                             Panel destinationPanelVertical = (Panel)echiquierTable.GetControlFromPosition(positionX, i);
-                            destinationPanelVertical.BackColor = Color.LightGreen;
+                            HighlightPanel(destinationPanelVertical);
                         }
                     }
                     break;
@@ -435,10 +454,10 @@ namespace EchecsCsharpProject
                     {
                         int newX = positionX + deltaX[i];
                         int newY = positionY + deltaY[i];
-                        if (newX >= 0 && newX < nbXYlength && newY >= 0 && newY < nbXYlength)
+                        if (newX >= 0 && newX < 8 && newY >= 0 && newY < 8)
                         {
                             Panel destinationPanel = (Panel)echiquierTable.GetControlFromPosition(newX, newY);
-                            destinationPanel.BackColor = Color.LightGreen;
+                            HighlightPanel(destinationPanel);
                         }
                     }
                     break;
@@ -449,48 +468,68 @@ namespace EchecsCsharpProject
                     {
                         int newX = positionX + i;
                         int newY = positionY + i;
-                        if (newX >= 0 && newX < nbXYlength && newY >= 0 && newY < nbXYlength)
+                        if (newX >= 0 && newX < 8 && newY >= 0 && newY < 8)
                         {
                             Panel destinationPanel = (Panel)echiquierTable.GetControlFromPosition(newX, newY);
-                            destinationPanel.BackColor = Color.LightGreen;
+                            HighlightPanel(destinationPanel);
                         }
                         newX = positionX - i;
                         newY = positionY + i;
-                        if (newX >= 0 && newX < nbXYlength && newY >= 0 && newY < nbXYlength)
+                        if (newX >= 0 && newX < 8 && newY >= 0 && newY < 8)
                         {
                             Panel destinationPanel = (Panel)echiquierTable.GetControlFromPosition(newX, newY);
-                            destinationPanel.BackColor = Color.LightGreen;
+                            HighlightPanel(destinationPanel);
                         }
                     }
                     break;
                 case Constantes.REINE_B:
                 case Constantes.REINE_N:
                     // Déplacements horizontaux, verticaux et diagonaux possibles
-                    for (int i = 0; i < nbXYlength; i++)
+                    for (int i = 0; i < 8; i++)
                     {
+                        // Horizontalement
                         if (i != positionX)
                         {
                             Panel destinationPanelHorizontal = (Panel)echiquierTable.GetControlFromPosition(i, positionY);
-                            destinationPanelHorizontal.BackColor = Color.LightGreen;
+                            HighlightPanel(destinationPanelHorizontal);
                         }
+                        // Verticalement
                         if (i != positionY)
                         {
                             Panel destinationPanelVertical = (Panel)echiquierTable.GetControlFromPosition(positionX, i);
-                            destinationPanelVertical.BackColor = Color.LightGreen;
+                            HighlightPanel(destinationPanelVertical);
                         }
+                        // Diagonale Droite Bas
                         int newX = positionX + i;
                         int newY = positionY + i;
-                        if (newX >= 0 && newX < nbXYlength && newY >= 0 && newY < nbXYlength)
+                        if (newX >= 0 && newX < 8 && newY >= 0 && newY < 8)
                         {
                             Panel destinationPanelDiagonal1 = (Panel)echiquierTable.GetControlFromPosition(newX, newY);
-                            destinationPanelDiagonal1.BackColor = Color.LightGreen;
+                            HighlightPanel(destinationPanelDiagonal1);
                         }
-                        newX = positionX - i;
-                        newY = positionY + i;
-                        if (newX >= 0 && newX < nbXYlength && newY >= 0 && newY < nbXYlength)
+                        // Diagonale Droite Haut
+                        newX = positionX + i;
+                        newY = positionY - i;
+                        if (newX >= 0 && newX < 8 && newY >= 0 && newY < 8)
                         {
                             Panel destinationPanelDiagonal2 = (Panel)echiquierTable.GetControlFromPosition(newX, newY);
-                            destinationPanelDiagonal2.BackColor = Color.LightGreen;
+                            HighlightPanel(destinationPanelDiagonal2);
+                        }
+                        // Diagonale Gauche Haut
+                        newX = positionX - i;
+                        newY = positionY - i;
+                        if (newX >= 0 && newX < 8 && newY >= 0 && newY < 8)
+                        {
+                            Panel destinationPanelDiagonal2 = (Panel)echiquierTable.GetControlFromPosition(newX, newY);
+                            HighlightPanel(destinationPanelDiagonal2);
+                        }
+                        // Diagonale Gauche Bas
+                        newX = positionX - i;
+                        newY = positionY + i;
+                        if (newX >= 0 && newX < 8 && newY >= 0 && newY < 8)
+                        {
+                            Panel destinationPanelDiagonal2 = (Panel)echiquierTable.GetControlFromPosition(newX, newY);
+                            HighlightPanel(destinationPanelDiagonal2);
                         }
                     }
                     break;
@@ -503,10 +542,10 @@ namespace EchecsCsharpProject
                         {
                             int newX = positionX + i;
                             int newY = positionY + j;
-                            if (newX >= 0 && newX < nbXYlength && newY >= 0 && newY < nbXYlength)
+                            if (newX >= 0 && newX < 8 && newY >= 0 && newY < 8)
                             {
                                 Panel destinationPanel = (Panel)echiquierTable.GetControlFromPosition(newX, newY);
-                                destinationPanel.BackColor = Color.LightGreen;
+                                HighlightPanel(destinationPanel);
                             }
                         }
                     }
@@ -515,7 +554,7 @@ namespace EchecsCsharpProject
                     break;
             }
         }
-
+        
         private void DeplacementPiece(PictureBox sourcePictureBox, int destinationX, int destinationY)
         {
             // Récupérer les informations sur la pièce à déplacer
