@@ -1,4 +1,5 @@
 ﻿using Commun;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 
@@ -270,15 +271,25 @@ namespace EchecsCsharpProject
         #region Logique de l'échiquier
         private bool IsMoveValid(Dictionary<string, object> source, Dictionary<string, object> destination)
         {
-            String nomPiece = (String)source.Values.ElementAt(0);
+            // Récupérer le nom de la pièce source et de la pièce de destination pour tests
+            String nomPieceSource = (String)source.Values.ElementAt(0);
+            String pieceDestination = (String)destination.Values.ElementAt(0);
+
+            // Récupérer les coordonnées de la case source et de la case destination
             int[] xySource = new int[2] { (int)source.Values.ElementAt(1), (int)source.Values.ElementAt(2) };
             int[] xyDestination = new int[2] { (int)destination.Values.ElementAt(1), (int)destination.Values.ElementAt(2) };
 
+            // Check si le déplacement est possible, on joue pas sur nos pions
+            if (nomPieceSource.Contains("Blanc") && pieceDestination.Contains("Blanc") ||
+                nomPieceSource.Contains("Noir") && pieceDestination.Contains("Noir"))
+                return false;
+
+            // Si la pièce est déplacée sur la même case
             if (xySource[0] == xyDestination[0] && xySource[1] == xyDestination[1])
                 return false;
 
-
-            switch (nomPiece)
+            // Vérifier si le déplacement est valide suivant les possiblités de déplacements de la pièce
+            switch (nomPieceSource)
             {
                 case Constantes.PION_B:
                     // pos - 1 (en y)
@@ -327,9 +338,6 @@ namespace EchecsCsharpProject
                 default:
                     break;
             }
-
-
-
             return false;
         }
         private void PictureBox_Click(object sender, EventArgs e)
@@ -358,19 +366,14 @@ namespace EchecsCsharpProject
             //Oui : on vérifie si le déplacement est valide
             else
             {
-                String pieceSource = (String)savePiece.Values.ElementAt(0);
-                String pieceDestination = (String)pieceData.Values.ElementAt(0);
-                if (pieceSource.Contains("Blanc") && pieceDestination.Contains("Noir") || 
-                    pieceSource.Contains("Noir") && pieceDestination.Contains("Blanc") || 
-                    pieceDestination == "CaseVide")
-                    if (IsMoveValid(savePiece, pieceData))
-                    {
-                        // Effectuer le déplacement de la pièce
-                        DeplacementPiece(selectedPictureBox, (int)pieceData.Values.ElementAt(1), (int)pieceData.Values.ElementAt(2));
-                        isWhiteTurn = !isWhiteTurn;
-                        labelTourDeJeu.Text = $"Tour de jeu : {(isWhiteTurn ? "Blanc" : "Noir")}";
-                        labelTourDeJeu.Refresh();
-                    }
+                if (IsMoveValid(savePiece, pieceData))
+                {
+                    // Effectuer le déplacement de la pièce
+                    DeplacementPiece(selectedPictureBox, (int)pieceData.Values.ElementAt(1), (int)pieceData.Values.ElementAt(2));
+                    isWhiteTurn = !isWhiteTurn;
+                    labelTourDeJeu.Text = $"Tour de jeu : {(isWhiteTurn ? "Blanc" : "Noir")}";
+                    labelTourDeJeu.Refresh();
+                }
                 ReinitialiserCouleursFondEchiquier();
                 selectedPictureBox = null;
                 savePiece = null;
@@ -553,8 +556,8 @@ namespace EchecsCsharpProject
                 default:
                     break;
             }
-        }
-        
+        }      
+
         private void DeplacementPiece(PictureBox sourcePictureBox, int destinationX, int destinationY)
         {
             // Récupérer les informations sur la pièce à déplacer
@@ -568,16 +571,33 @@ namespace EchecsCsharpProject
             Panel destinationPanel = (Panel)echiquierTable.GetControlFromPosition(destinationX, destinationY);
             // Get la PictureBox de la nouvelle case
             PictureBox destinationPictureBox = (PictureBox)destinationPanel.Controls[1];
-
             // Informations sur la pièce à déplacer mises à jour
-            Dictionary<string, object> destinationPieceTag = new Dictionary<string, object>()
+            Dictionary<String, object> futurDestinationPieceTag = new Dictionary<string, object>()
             {
                 { "Key", pieceData["Key"] },
                 { "PositionX", destinationX },
                 { "PositionY", destinationY },
                 { "ImageLink", pieceData["ImageLink"] }
             };
-            destinationPictureBox.Tag = destinationPieceTag;
+
+            // Récupérer les informations sur la pièce de desitination si présente
+            Dictionary<string, object> pieceDestination = (Dictionary<string, object>)destinationPictureBox.Tag;
+
+            // Récupère l'équipe de la pièce de destination
+            string equipePieceDestination = (String)pieceDestination["Key"];
+            string equipePieceSource = (String)pieceData["Key"];
+
+            // Ajoute à la liste "listeCoupJouee" la couleur de l'équipe à qui appartient cette pièce (Blanc ou Noir)
+            string couleurEquipePièceSource = equipePieceSource.Contains("Blanc") ? "Blanc" : "Noir";
+            string couleurEquipePièceDestination = equipePieceDestination.Contains("Blanc") ? "Blanc" : "Noir";
+
+            if (equipePieceDestination != "CaseVide" && couleurEquipePièceSource != couleurEquipePièceDestination)
+            {
+                // afficher un message pour dire que la pièce a été mangée par le nom de la pièce
+                listeCoupJouee.Add("La pièce " + (string)pieceDestination["Key"] + " a été mangée par la pièce " + (string)pieceData["Key"] + ".");
+            }
+
+            destinationPictureBox.Tag = futurDestinationPieceTag;
             destinationPictureBox.Image = Image.FromFile((string)pieceData["ImageLink"]);
             
             // Supprimer l'image et le tag de l'ancienne case
